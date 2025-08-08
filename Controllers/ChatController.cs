@@ -22,31 +22,18 @@ namespace ChatApp.Controllers
             return View(users);
         }
 
-        public IActionResult Chat(string username)
+        public IActionResult Chat(string receiver)
         {
+            ViewBag.Receiver = receiver;
             var currentUser = User.Identity.Name;
             var messages = _context.Messages
-                .Find(m => (m.SenderUsername == currentUser && m.ReceiverUsername == username) ||
-                           (m.SenderUsername == username && m.ReceiverUsername == currentUser))
+                .Find(m => (m.SenderUsername == currentUser && m.ReceiverUsername == receiver) ||
+                           (m.SenderUsername == receiver && m.ReceiverUsername == currentUser))
                 .SortBy(m => m.Time)
                 .ToList();
 
-            ViewBag.Receiver = username;
             return View(messages);
         }
 
-        [HttpPost]
-        public IActionResult SendMessage(string receiver, string message)
-        {
-            var msg = new Chat
-            {
-                SenderUsername = User.Identity.Name,
-                ReceiverUsername = receiver,
-                Message = message
-            };
-
-            _context.Messages.InsertOne(msg);
-            return RedirectToAction("Chat", new { username = receiver });
-        }
     }
 }

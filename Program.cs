@@ -1,6 +1,11 @@
 using ChatApp.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using DotNetEnv;
 var builder = WebApplication.CreateBuilder(args);
+
+DotNetEnv.Env.Load();
+
+Console.WriteLine($"Key: {Environment.GetEnvironmentVariable("ENCRYPTION_KEY")}");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -46,6 +51,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Chat}/{action=Index}/{id?}");
 
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<ChatHub>("/chathub"); 
 
 app.Run();

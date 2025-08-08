@@ -13,5 +13,17 @@ namespace ChatApp.Models
 
         [BsonElement("PasswordHash")]
         public string? PasswordHash { get; set; }
+
+        [BsonElement("Email")]
+        public string? Email { get; set; }
+
+        [BsonElement("PhoneNumber")]
+        public string? PhoneNumber { get; set; }
+
+        [BsonElement("Address")]
+        public string? Address { get; set; }
+
+        [BsonElement("City")]
+        public string? City { get; set; }
     }
 }

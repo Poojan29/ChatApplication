@@ -1,21 +1,68 @@
 @{
     ViewBag.Title = "Login";
+    @model LoginViewModel;
 }
+
+<style>
+    body {
+        background-color: #121212;
+        color: white;
+        font-family: sans-serif;
+    }
+
+    #inputArea {
+        width: 40%;
+        padding: 10px;
+        margin-right: 10px;
+        background-color: #2a2a2a;
+    }
+
+    #inputArea input[type="text"] {
+        width: 40%;
+        padding: 10px;
+        margin-right: 10px;
+    }
+    .secondLabel {
+        margin-top: 10px;
+        display: block;
+    }
+
+    #inputArea:focus {
+        border-color: #dc3545;
+        /* red */
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    .btn {
+        margin-top: 50px;
+    }
+    a {
+        color: #dc3545;
+        text-decoration: none;
+        margin-top: 20px;
+    }
+</style>
 
 <h2>Login</h2>
 
 <form asp-action="Login" method="post">
     <div>
         <label>Username</label>
-        <input name="username" class="form-control" />
+        <input id="inputArea" name="username" class="form-control text-light" />
+        <span asp-validation-for="Username" class="text-danger"></span>
     </div>
     <div>
-        <label>Password</label>
-        <input name="password" type="password" class="form-control" />
+        <label class="secondLabel">Password</label>
+        <input id="inputArea" name="password" type="password" class="form-control text-light" />
+        <span asp-validation-for="Password" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-success">Login</button>
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <button type="submit" class="btn btn-danger">Login</button>
 </form>
 
 <div>
-    <a asp-action="Register">Don’t have an account? Register</a>
+    <a id="account" asp-action="Register">Don’t have an account? Register</a>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

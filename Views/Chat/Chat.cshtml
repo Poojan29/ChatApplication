@@ -1,11 +1,11 @@
 @model IEnumerable<ChatApp.Models.Chat>
 @{
     ViewBag.Title = "Chat";
-    var receiver = ViewBag.Receiver as string;
-    var sender = ViewBag.UserName as string;
+    var receiver = @ViewBag.Receiver;
+    var currentUser = @User.Identity?.Name;
 }
 
-<h2>Chat with @receiver</h2>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
 <style>
     body {
@@ -19,24 +19,22 @@
         max-width: 600px;
         margin: 0 auto;
         font-family: sans-serif;
+        overflow: hidden;
     }
 
     #chatWindow {
-        height: 500px;
+        height: 530px;
         overflow-y: scroll;
         padding: 10px;
-        border-radius: 10px;
-        background-color: #2a2a2a;
-        scrollbar-width: thin;
     }
 
-    .message {
+    .messageBox {
         margin: 10px 0;
         padding: 10px 15px;
         max-width: 75%;
         border-radius: 18px;
         clear: both;
-        display: inline-block;
+        display: flex;
         word-wrap: break-word;
     }
 
@@ -44,20 +42,36 @@
         font-size: 8px;
     }
 
-    .message.sent {
+    .messageBox.sent {
         background-color: #e03e3e;
         float: right;
         text-align: right;
+        align-items: center;
+        direction: rtl;
     }
 
-    .message.received {
+    .messageBox.received {
         background-color: rgb(165, 112, 112);
         float: left;
         text-align: left;
+        align-items: center;
     }
 
     #inputArea {
-        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background-color: #2a2a2a;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        max-width: 600px;
+        margin: 10px auto;
+        border-radius: 20px;
+    }
+
+    #inputArea input[type="file"] {
+        display: none;
     }
 
     #inputArea input[type="text"] {
@@ -70,48 +84,116 @@
         padding: 10px 20px;
     }
 
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        /* Light gray background */
+    #sendBtn {
+        background-color: #e03e3e;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    #sendBtn:hover {
+        background-color: #1ebc59;
+    }
+
+    #attachBtn {
+        font-size: 20px;
+        cursor: pointer;
+        margin-right: 10px;
+        color: #e03e3e;
+    }
+
+    #msg {
+        flex: 1;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 20px;
+        outline: none;
+        font-size: 16px;
+        background-color: #fff;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .welcome {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    #chatWindow::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #chatWindow::-webkit-scrollbar-track {
+        background: #1e1e1e;
         border-radius: 10px;
-        /* Rounded corners for the track */
+    }
+
+    #chatWindow::-webkit-scrollbar-thumb {
+        background-color: #f44336;
+        border-radius: 10px;
+        border: 3px solid #1e1e1e;
     }
 </style>
 
-<a asp-action="Index" class="btn btn-secondary mb-2">Back to Users</a>
+<div class="welcome">
+    <h2>Chat with <span class="text-danger"> @receiver</span></h2>
+    <a asp-action="Index" class="btn btn-danger mb-2">
+        <i class="fa-solid fa-users"></i>
+    </a>
+</div>
 
-<div id="chatBox"">
-    <div id=" chatWindow">
-    @foreach (var msg in Model)
-    {
-        var cssClass = msg.ReceiverUsername == receiver ? "sent" : "received";
-        <div class="message @cssClass">
-            <strong>@msg.SenderUsername:</strong> @msg.Message
-            <div class="timestamp">@msg.Time</div>
+
+<div class="mainWindow">
+    <div id="chatBox">
+        <div id="chatWindow">
+            @foreach (var msg in Model)
+            {
+                string? decryptedMessage = EncryptionHelper.Decrypt(msg.Message);
+                var cssClass = msg.ReceiverUsername == receiver ? "sent" : "received";
+                var margin = msg.ReceiverUsername == receiver ? "ms-2" : "me-2";
+                var senderName = msg.SenderUsername == currentUser ? "You" : msg.SenderUsername;
+                <div class="messageBox @cssClass">
+                    <div class="rounded-circle @margin bg-dark d-flex justify-content-center align-items-center"
+                        style="width: 30px; height: 30px; font-size: 1rem;">
+                        @currentUser?[0].ToString().ToUpper()
+                    </div>
+                    <div>
+                        <strong>@senderName:</strong> @decryptedMessage
+                        <div class="timestamp">@msg.Time</div>
+                    </div>
+                </div>
+            }
         </div>
-    }
-</div>
 
-<div id="inputArea">
-    @using (Html.BeginForm("UploadImage", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
-    {
-        <input type="file" name="imageFile" accept="image/*" />
-        <input type="submit" value="Upload Image" />
-    }
-    <input id="msg" type="text" placeholder="Type your message..." />
-    <button id="sendBtn" onclick="sendMessage()" class="btn btn-primary">Send</button>
-</div>
+        <div id="inputArea">
+            @using (Html.BeginForm("UploadImage", "Home", FormMethod.Post, new
+            {
+                enctype = "multipart/form-data",
+                @id =
+                        "uploadForm"
+            }))
+            {
+                <label for="imageFile" id="attachBtn">
+                    <i class="fa-solid fa-paperclip"></i>
+                </label>
+                <input type="file" name="imageFile" id="imageFile" accept="image/*"
+                    onchange="document.getElementById('uploadForm').submit()" />
+            }
 
-</div>
-
-@* <form asp-action="SendMessage" method="post" class="mt-3">
-    <input type="hidden" name="receiver" value="@receiver" />
-    <div class="form-group">
-        <textarea id="msg" name="message" class="form-control" rows="2" placeholder="Type your message here..."
-            required></textarea>
+            <input id="msg" type="text" placeholder="Type a message..." />
+            <button id="sendBtn" type="submit">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
-    <button id="sendBtn" type="submit" class="btn btn-primary">Send</button>
-</form> *@
+</div>
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
@@ -121,54 +203,53 @@
             .withUrl("/chathub")
             .build();
 
-        connection.on("ReceiveMessage", function (name, message, time) {
-            const cssClass = name === sender ? 'sent' : 'received';
-            const msgHtml = `
-                    <div class="message ${cssClass}">
-                        <strong>${name}:</strong> ${message}
-                        <div class="timestamp">${time}</div>
-                    </div>`;
+        const sender = '@User.Identity.Name';
+        const receiver = '@ViewBag.Receiver';
+
+        connection.on("ReceiveMessage", function (from, to, message, time) {
+            location.reload();
+            const isSentByYou = from === sender;
+            const cssClass = isSentByYou ? 'sent' : 'received';
+            const nameToShow = isSentByYou ? 'You' : from;
+            const msgHtml = `<div class="messageBox "${cssClass}">
+                                <div class="rounded-circle bg-dark d-flex justify-content-center align-items-center"
+                                    style="width: 30px; height: 30px; font-size: 1rem;">
+                                    @currentUser?[0].ToString().ToUpper()
+                                </div>
+                                <div>
+                                    <strong>"${from}":</strong> "${message}"
+                                    <div class="${timestamp}">"${time}</div>
+                                </div>
+                            </div>`;
             $('#chatWindow').append(msgHtml);
             $('#chatWindow').scrollTop($('#chatWindow')[0].scrollHeight);
+
         });
 
         connection.start().then(function () {
-            $('#msg').keypress(function (e) {
-                if (e.which === 13) {
-                    sendMessage();
+            document.getElementById("sendBtn").addEventListener("click", function (e) {
+                e.preventDefault();
+
+                const message = document.getElementById("msg").value.trim();
+                const time = new Date().toLocaleTimeString();
+
+                if (message) {
+                    connection.invoke("SendMessage", sender, receiver, message, time)
+                        .then(() => {
+                            document.getElementById("msg").value = ""
+                            location.reload();
+                        })
+                        .catch(err => console.error(err.toString()));
                 }
             });
         }).catch(function (err) {
-            return console.error(err.toString());
+            return console.error("Connection failed:", err.toString());
         });
 
-        function sendMessage() {
-            const sender = '@ViewBag.UserName';
-            const receiver = '@receiver';
-            const message = $('#msg').val();
-            const time = new Date().toLocaleTimeString();
-
-            if (!message) {
-                alert("Please enter your message!");
-                return;
-            }
-
-            fetch("/Chat/SendMessage", {
-                method: "POST",
-                body: new URLSearchParams({
-                    receiver: receiver,
-                    message: message
-                })
-            })
-
-            connection.invoke("SendMessage", sender, message, time)
-                .catch(function (err) {
-                    return console.error(err.toString());
-                });
-
-            $('#msg').val('').focus();
-        }
-
+        $(window).on('load', function () {
+            var chatWindow = $('#chatWindow');
+            chatWindow.scrollTop(chatWindow[0].scrollHeight);
+        });
 
     </script>
 }

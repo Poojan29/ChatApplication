@@ -1,22 +1,92 @@
-@model ChatApp.Models.User
+
 @{
     ViewBag.Title = "Register";
+    @model RegisterViewModel;
 }
+
+<style>
+    body {
+        background-color: #121212;
+        color: white;
+        font-family: sans-serif;
+    }
+
+    #inputArea {
+        width: 40%;
+        padding: 10px;
+        margin-right: 10px;
+        background-color: #2a2a2a;
+    }
+
+    #inputArea input[type="text"] {
+        width: 40%;
+        padding: 10px;
+        margin-right: 10px;
+    }
+
+    .secondLabel {
+        margin-top: 10px;
+        display: block;
+    }
+
+    #inputArea:focus {
+        border-color: #dc3545;
+        /* red */
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .btn {
+        margin-top: 50px;
+    }
+
+    a {
+        color: #dc3545;
+        text-decoration: none;
+        margin-top: 20px;
+    }
+</style>
 
 <h2>Register</h2>
 
 <form asp-action="Register" method="post">
     <div>
         <label>Username</label>
-        <input asp-for="Username" class="form-control" />
+        <input id="inputArea" asp-for="Username" class="form-control text-light" />
+        <span asp-validation-for="Username" class="text-danger"></span>
     </div>
     <div>
-        <label>Password</label>
-        <input asp-for="PasswordHash" type="password" class="form-control" />
+        <label class="secondLabel">Password</label>
+        <input id="inputArea" asp-for="Password" type="password" class="form-control text-light" />
+        <span asp-validation-for="Password" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Register</button>
+    <div>
+        <label class="secondLabel">Email</label>
+        <input id="inputArea" asp-for="Email" type="email" class="form-control text-light" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div>
+        <label class="secondLabel">PhoneNumber</label>
+        <input id="inputArea" asp-for="PhoneNumber" type="number" class="form-control text-light" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+    <div>
+        <label class="secondLabel">Address</label>
+        <input id="inputArea" asp-for="Address" class="form-control text-light" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div>
+        <label class="secondLabel">City</label>
+        <input id="inputArea" asp-for="City" class="form-control text-light" />
+        <span asp-validation-for="City" class="text-danger"></span>
+    </div>
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <button type="submit" class="btn btn-danger">Register</button>
 </form>
 
 <div>
     <a asp-action="Login">Already have an account? Login</a>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

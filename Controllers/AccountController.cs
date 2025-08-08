@@ -21,43 +21,67 @@ namespace ChatApp.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(User user)
+        public async Task<IActionResult> Register(RegisterViewModel registerViewModel)
         {
-            var existing = _context.Users.Find(u => u.Username == user.Username).FirstOrDefault();
-            if (existing != null)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Username already exists.");
-                return View();
+                return View(registerViewModel);
+            }
+            else
+            {
+                var existing = _context.Users.Find(u => u.Username == registerViewModel.Username).FirstOrDefault();
+                if (existing != null)
+                {
+                    ModelState.AddModelError("", "Username already exists.");
+                    return View(registerViewModel);
+                }
+                var user = new User
+                {
+                    Username = registerViewModel.Username,
+                    PasswordHash = registerViewModel.Password,
+                    Email = registerViewModel.Email,
+                    PhoneNumber = registerViewModel.PhoneNumber,
+                    Address = registerViewModel.Address,
+                    City = registerViewModel.City
+                };
+
+                user.PasswordHash = HashPassword(user.PasswordHash);
+                await _context.Users.InsertOneAsync(user);
+                return RedirectToAction("Login");
             }
 
-            user.PasswordHash = HashPassword(user.PasswordHash);
-            await _context.Users.InsertOneAsync(user);
-            return RedirectToAction("Login");
         }
 
         public IActionResult Login() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            var hashed = HashPassword(password);
-            var user = _context.Users.Find(u => u.Username == username && u.PasswordHash == hashed).FirstOrDefault();
-
-            if (user == null)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Invalid credentials.");
-                return View();
+                return View(model);
             }
+            else
+            {
+                var hashed = HashPassword(model.Password);
+                var user = _context.Users.Find(u => u.Username == model.Username && u.PasswordHash == hashed).FirstOrDefault();
 
-            var claims = new List<Claim>
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "Invalid credentials.");
+                    return View(model);
+                }
+
+                var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username)
             };
 
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
-            return RedirectToAction("Index", "Chat");
+                return RedirectToAction("Index", "Chat");
+            }
         }
 
         public async Task<IActionResult> Logout()

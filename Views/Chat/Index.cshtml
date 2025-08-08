@@ -2,13 +2,12 @@
 @{
     ViewBag.Title = "Users";
 
-    Func<string, string> getColorClass = (username) =>
+    string getColorClass(string username)
     {
-        var colors = new[] { "bg-primary", "bg-success", "bg-danger", "bg-warning", "bg-info", "bg-secondary", "bg-dark",
-"bg-purple", "bg-teal", "bg-orange" };
-        var index = Math.Abs(username.GetHashCode()) % colors.Length;
-        return colors[index];
-    };
+        var hash = username.GetHashCode();
+        var colors = new[] { "bg-danger", "bg-warning", "bg-success", "bg-info", "bg-primary", "bg-secondary", "bg-dark", "bg-light" };
+        return colors[Math.Abs(hash) % colors.Length];
+    }
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -40,45 +39,52 @@
         background-color: #2a2a2a;
     }
 
-    /* Custom colors */
-    .bg-purple {
-        background-color: #9b59b6 !important;
+
+    .card {
+        border-radius: 20px;
     }
 
-    .bg-teal {
-        background-color: #1abc9c !important;
-    }
-
-    .bg-orange {
-        background-color: #e67e22 !important;
+    .welcome {
+        display: flex;
+        justify-content: space-between;
     }
 </style>
 
-<h2>Welcome, @User?.Identity?.Name</h2>
-<a asp-controller="Account" asp-action="Logout" class="btn btn-danger mb-2">Logout</a>
+<div class="welcome">
+    <h2>Welcome, <span class="text-primary">@User?.Identity?.Name</span>!</h2>
+    <a asp-controller="Account" asp-action="Logout" class="btn btn-danger mb-2"><i
+            class="fa-solid fa-power-off"></i></a>
+</div>
 
 <h4>Chats</h4>
 
-<ul class="list-group">
-    @foreach (var user in Model)
-    {
-        var colorClass = getColorClass(user.Username);
-        <li class="list-group-item list-group-item-dark d-flex align-items-center gap-3">
-            <!-- Avatar -->
-            <div class="avatar-circle @colorClass text-white d-flex justify-content-center align-items-center">
-                @user.Username?[0].ToString().ToUpper()
-            </div>
+<div class="container">
+    <div class="row row-cols-5 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 g-3">
+        @foreach (var user in Model)
+        {
+            var colorClass = getColorClass(user.Username);
+            Console.WriteLine($"Color = {colorClass}");
+            <a asp-action="Chat" asp-route-receiver="@user.Username" class="flex-grow-1 text-decoration-none text-light">
+                <div class="col">
+                    <div class="card text-white @colorClass text-center h-100 position-relative rounded-5">
 
-            <!-- Username -->
-            <a asp-action="Chat" asp-route-username="@user.Username" class="flex-grow-1 text-decoration-none text-light">
-                @user.Username
-                <div class="flex-grow-1 text-left"></div>
+
+                        <!-- Avatar -->
+                        <div class="card-body d-flex justify-content-center align-items-center flex-column">
+                            <div class="rounded-circle bg-dark d-flex justify-content-center align-items-center"
+                                style="width: 80px; height: 80px; font-size: 2rem;">
+                                @user.Username?[0].ToString().ToUpper()
+                            </div>
+
+                        </div>
+
+                        <!-- Username -->
+                        <div class="card-footer bg-transparent border-0 text-black fw-semibold">
+                            @user.Username
+                        </div>
+                    </div>
+                </div>
             </a>
-
-            <!-- Arrow Icon -->
-            <div class="text-muted">
-                <i class="fas fa-chevron-right"></i>
-            </div>
-        </li>
-    }
-</ul>
+        }
+    </div>
+</div>
